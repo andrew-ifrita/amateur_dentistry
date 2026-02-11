@@ -15,62 +15,147 @@ permissions:
   pull-requests: write
 
 jobs:
-  build:
-    name: Build
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: site
-          path: |
-            index.html
-            *.jpg
-            *.jpeg
-            *.png
-            *.avif
-            *.webp
+          node-version: '22'
 
-  deploy-preview:
-    name: Deploy Preview
-    needs: build
-    if: github.event_name == 'pull_request'
-    uses: paritytech/dotns-sdk/.github/workflows/deploy.yml@main
-    with:
-      basename: andrewexample00
-      artifact-name: site
-      mode: preview
-      subname-format: pr-number
-      register-base: true
-      max-retries: 5
-    secrets:
-      mnemonic: ${{ secrets.DOTNS_MNEMONIC }}
+      - uses: oven-sh/setup-bun@v2
 
-  deploy-production:
-    name: Deploy Production
-    needs: build
-    if: github.event_name == 'push'
-    uses: paritytech/dotns-sdk/.github/workflows/deploy.yml@main
-    with:
-      basename: andrewexample00
-      artifact-name: site
-      mode: production
-      register-base: true
-    secrets:
-      mnemonic: ${{ secrets.DOTNS_MNEMONIC }}
+      - name: Install dotns CLI
+        run: |
+          git clone --depth 1 https://github.com/paritytech/dotns-sdk.git dotns-sdk
+          cd dotns-sdk/packages/cli
+          bun install
+          bun run build
+          echo "$GITHUB_WORKSPACE/dotns-sdk/packages/cli/dist" >> "$GITHUB_PATH"
+          chmod +x dist/cli.js
 
-  comment:
-    name: Comment on PR
-    needs: deploy-preview
-    if: github.event_name == 'pull_request' && success()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: marocchino/sticky-pull-request-comment@v2
+      - name: Prepare site artifact
+        run: |
+          mkdir -p build
+          cp index.html *.jpg *.jpeg *.png *.avif *.webp build/ 2>/dev/null || true
+
+      - name: Compute build hash
+        id: hash
+        run: echo "hash=$(find build -type f -exec sha256sum {} \; | sort | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Check deployment cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: .deploy-cache
+          key: deploy-${{ steps.hash.outputs.hash }}
+
+      - name: Load cached CID
+        id: cached-deploy
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          echo "cid=$(cat .deploy-cache/cid)" >> "$GITHUB_OUTPUT"
+          echo "::notice::Found cached CID: $(cat .deploy-cache/cid)"
+
+      - name: Upload to Bulletin
+        id: upload
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: |
+            RESULT=$(dotns bulletin upload build \
+              --mnemonic '${{ secrets.DOTNS_MNEMONIC }}' \
+              --parallel \
+              --no-history \
+              --json)
+            echo "::notice::Upload result: ${RESULT}"
+            CID=$(echo "$RESULT" | jq -r '.cid')
+            echo "cid=${CID}" >> "$GITHUB_OUTPUT"
+
+      - name: Save deployment to cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .deploy-cache
+          echo "${{ steps.upload.outputs.cid }}" > .deploy-cache/cid
+
+      - name: Determine CID
+        id: cid
+        run: |
+          if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
+            echo "cid=${{ steps.cached-deploy.outputs.cid }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "cid=${{ steps.upload.outputs.cid }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Register domain if needed
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: |
+            LABEL='andrewexample00'
+            LOOKUP=$(dotns lookup name "$LABEL" --json 2>/dev/null || echo '{"exists":false}')
+            EXISTS=$(echo "$LOOKUP" | jq -r '.exists // false')
+
+            if [ "$EXISTS" != "true" ]; then
+              echo "::notice::Registering domain ${LABEL}.dot"
+              dotns register domain \
+                --name "$LABEL" \
+                --status none \
+                --mnemonic '${{ secrets.DOTNS_MNEMONIC }}'
+            else
+              echo "::notice::Domain ${LABEL}.dot already registered"
+            fi
+
+      - name: Set contenthash
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: |
+            dotns content set \
+              'andrewexample00' \
+              '${{ steps.cid.outputs.cid }}' \
+              --mnemonic '${{ secrets.DOTNS_MNEMONIC }}'
+
+      - name: Deployment summary
+        id: final
+        run: |
+          LABEL='andrewexample00'
+          CID='${{ steps.cid.outputs.cid }}'
+          echo "cid=${CID}" >> "$GITHUB_OUTPUT"
+          echo "domain=${LABEL}" >> "$GITHUB_OUTPUT"
+          echo "url=https://${LABEL}.paseo.li" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
+            echo "## Domain Updated (CID Cached) :rocket:" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Deployment Complete :rocket:" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| -------- | ----- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Domain | \`${LABEL}.dot\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| CID | \`${CID}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Main:** [https://${LABEL}.paseo.li](https://${LABEL}.paseo.li)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Alternative:** [https://${LABEL}.bigtava.online](https://${LABEL}.bigtava.online)" >> $GITHUB_STEP_SUMMARY
+          echo "- **IPFS Gateway:** [https://ipfs.dotspark.app/ipfs/${CID}](https://ipfs.dotspark.app/ipfs/${CID})" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: deploy-preview
           message: |
-            ### Preview ready
-            **URL:** ${{ needs.deploy-preview.outputs.url }}
-            **Domain:** `${{ needs.deploy-preview.outputs.fqdn }}`
-            **CID:** `${{ needs.deploy-preview.outputs.cid }}`
+            ### Deployed
+            **URL:** https://andrewexample00.paseo.li
+            **Domain:** `andrewexample00.dot`
+            **CID:** `${{ steps.cid.outputs.cid }}`

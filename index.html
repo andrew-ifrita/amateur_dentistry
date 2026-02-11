@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andrew's Amateur Dentistry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6e 100%);
+            color: white;
+            padding: 0.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .logo span {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        nav a:hover {
+            opacity: 0.8;
+        }
+
+        .hero {
+            background: linear-gradient(rgba(44, 90, 160, 0.9), rgba(26, 58, 110, 0.9)),
+                        url('image03.jpg') center/cover;
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .hero-logo {
+            max-width: 300px;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .btn {
+            display: inline-block;
+            background: white;
+            color: #2c5aa0;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c5aa0;
+            font-size: 2rem;
+        }
+
+        /* Facility Section */
+        #facility {
+            background: #1a3a6e;
+            max-width: 100%;
+            padding: 4rem 2rem;
+        }
+
+        #facility h2 {
+            color: white;
+        }
+
+        .facility-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .facility-content img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .facility-text {
+            color: white;
+        }
+
+        .facility-text h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .facility-text p {
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        /* Services */
+        .services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .service-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .service-card h3 {
+            color: #2c5aa0;
+            margin-bottom: 1rem;
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .service-card.featured {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            text-align: left;
+            align-items: center;
+        }
+
+        .service-card.featured img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .service-card.featured .service-text {
+            padding: 1rem;
+        }
+
+        .service-card.featured h3 {
+            font-size: 1.5rem;
+        }
+
+        /* Testimonial */
+        #testimonial {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6e 100%);
+            max-width: 100%;
+            padding: 4rem 2rem;
+        }
+
+        #testimonial h2 {
+            color: white;
+        }
+
+        .testimonial-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            color: white;
+        }
+
+        .testimonial-content img {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 5px solid white;
+            margin-bottom: 1.5rem;
+        }
+
+        .testimonial-content blockquote {
+            font-size: 1.5rem;
+            font-style: italic;
+            margin-bottom: 1rem;
+            opacity: 0.95;
+        }
+
+        .testimonial-content cite {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        /* About */
+        #about {
+            background: #f8f9fa;
+            max-width: 100%;
+            padding: 4rem 2rem;
+        }
+
+        .about-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .about-image img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .about-text p {
+            margin-bottom: 1rem;
+        }
+
+        .about-text h3 {
+            color: #2c5aa0;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Contact */
+        #contact {
+            background: white;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .contact-item h3 {
+            color: #2c5aa0;
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            background: #1a3a6e;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero-logo {
+                max-width: 200px;
+            }
+
+            nav ul {
+                gap: 1rem;
+            }
+
+            .logo span {
+                display: none;
+            }
+
+            .facility-content,
+            .about-content,
+            .service-card.featured {
+                grid-template-columns: 1fr;
+            }
+
+            .about-content {
+                text-align: center;
+            }
+
+            .service-card.featured {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="logo.png" alt="Andrew's Amateur Dentistry Logo">
+                <span>Andrew's Amateur Dentistry</span>
+            </div>
+            <ul>
+                <li><a href="#facility">Facility</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <img src="logo.png" alt="Andrew's Amateur Dentistry" class="hero-logo">
+        <h1>Welcome to Andrew's Amateur Dentistry</h1>
+        <p>Bringing enthusiasm and a can-do attitude to all your dental needs</p>
+        <a href="#contact" class="btn">Book an Appointment</a>
+    </section>
+
+    <section id="facility">
+        <h2>Our State-of-the-Art Facility</h2>
+        <div class="facility-content">
+            <img src="image01.jpg" alt="Our dental facility">
+            <div class="facility-text">
+                <h3>Vintage Charm Meets Modern(ish) Care</h3>
+                <p>Step into our lovingly maintained treatment room, where decades of character meet dental innovation. Our vintage chair has supported thousands of patients, and most of them walked out!</p>
+                <p>We believe in sustainable dentistry - why replace equipment when it still mostly works? Our facility features authentic patina, natural ventilation, and that classic dental office ambiance you remember from your nightmares.</p>
+                <p>Free tetanus shots available upon request.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="services">
+        <h2>Our Services</h2>
+        <div class="services">
+            <div class="service-card featured">
+                <img src="image03.jpg" alt="Precision drilling services">
+                <div class="service-text">
+                    <h3>Precision Drilling</h3>
+                    <p>Why use expensive dental drills when hardware store tools work just as well? Our signature service features Andrew's personal power drill collection, sanitized between uses (usually).</p>
+                    <p>We guarantee results you'll never forget - whether you want to or not. Our innovative approach has been described as "unforgettable," "surprising," and "please stop."</p>
+                </div>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🦷</div>
+                <h3>General Checkups</h3>
+                <p>We'll take a good look around and let you know what we find. Flashlight included.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">✨</div>
+                <h3>Teeth Cleaning</h3>
+                <p>A thorough cleaning with our extensive collection of brushes and scrapy tools.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🔧</div>
+                <h3>Fillings</h3>
+                <p>We fill holes with confidence and a variety of interesting materials.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">😁</div>
+                <h3>Cosmetic Work</h3>
+                <p>Want a new smile? We'll give it our best shot with whatever we have on hand.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="testimonial">
+        <h2>Happy Customers</h2>
+        <div class="testimonial-content">
+            <img src="smile01.jpeg" alt="Satisfied customer">
+            <blockquote>"I came in with all my teeth and left with a whole new look! Andrew really commits to his craft. I've never felt more... aerodynamic."</blockquote>
+            <cite>- Mike T., Professional Hockey Player</cite>
+        </div>
+    </section>
+
+    <section id="about">
+        <h2>Meet Andrew</h2>
+        <div class="about-content">
+            <div class="about-image">
+                <img src="image04.webp" alt="Andrew, Founder">
+            </div>
+            <div class="about-text">
+                <h3>Your Friendly Neighborhood Dental Enthusiast</h3>
+                <p>Hi, I'm Andrew! Ever since I was a kid watching YouTube tutorials, I knew I wanted to work with teeth. While dental school seemed like a lot of paperwork, I figured the best way to learn is by doing!</p>
+                <p>My journey started in my garage with a dream and a pair of pliers. Today, I've upgraded to a full toolkit and this snazzy apron (the red adds character).</p>
+                <p>When I'm not perfecting my craft, I enjoy collecting vintage dental equipment, watching surgery videos for tips, and assuring concerned neighbors that everything is fine.</p>
+                <p><strong>Our motto: "How hard can it be?"</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <h2>Contact Us</h2>
+        <div class="contact-info">
+            <div class="contact-item">
+                <h3>Location</h3>
+                <p>123 Molar Lane<br>Toothville, TV 12345<br>(Behind the abandoned warehouse)</p>
+            </div>
+            <div class="contact-item">
+                <h3>Hours</h3>
+                <p>Monday - Friday: 9am - 5pm<br>Weekends: By appointment<br>Emergencies: Whenever</p>
+            </div>
+            <div class="contact-item">
+                <h3>Phone</h3>
+                <p>(555) 123-TOOTH<br>Cash only. No insurance.<br>Waivers required.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Andrew's Amateur Dentistry. All rights reserved.</p>
+        <p>Disclaimer: We are not responsible for any outcomes. Results may vary. Bring your own anesthesia.</p>
+        <p>Not affiliated with any dental board, medical association, or health department.</p>
+    </footer>
+</body>
+</html>

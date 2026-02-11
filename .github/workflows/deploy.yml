@@ -1,0 +1,76 @@
+# Deploy to Bulletin Chain and register a DotNS domain.
+#
+# Pushes to master deploy to the base domain (andrewexample00.dot).
+# Pull requests get a preview subname (e.g. pr42.andrewexample00.dot).
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: |
+            index.html
+            *.jpg
+            *.jpeg
+            *.png
+            *.avif
+            *.webp
+
+  deploy-preview:
+    name: Deploy Preview
+    needs: build
+    if: github.event_name == 'pull_request'
+    uses: paritytech/dotns-sdk/.github/workflows/deploy.yml@main
+    with:
+      basename: andrewexample00
+      artifact-name: site
+      mode: preview
+      subname-format: pr-number
+      register-base: true
+      max-retries: 5
+    secrets:
+      mnemonic: ${{ secrets.DOTNS_MNEMONIC }}
+
+  deploy-production:
+    name: Deploy Production
+    needs: build
+    if: github.event_name == 'push'
+    uses: paritytech/dotns-sdk/.github/workflows/deploy.yml@main
+    with:
+      basename: andrewexample00
+      artifact-name: site
+      mode: production
+      register-base: true
+    secrets:
+      mnemonic: ${{ secrets.DOTNS_MNEMONIC }}
+
+  comment:
+    name: Comment on PR
+    needs: deploy-preview
+    if: github.event_name == 'pull_request' && success()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: deploy-preview
+          message: |
+            ### Preview ready
+            **URL:** ${{ needs.deploy-preview.outputs.url }}
+            **Domain:** `${{ needs.deploy-preview.outputs.fqdn }}`
+            **CID:** `${{ needs.deploy-preview.outputs.cid }}`
